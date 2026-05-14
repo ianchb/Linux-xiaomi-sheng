@@ -29,7 +29,7 @@ distro_version="forky"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
 
 # 🔥 MULTI FLAVOUR
-FLAVOURS=("gnome")
+FLAVOURS=("gnome" "kde")
 BOOTMODES=("dual")
 
 for FLAVOUR in "${FLAVOURS[@]}"; do
@@ -109,22 +109,37 @@ if [ "$distro_variant" = "desktop" ]; then
             gnome-shell gnome-session gnome-terminal gdm3 firefox-esr
 
         chroot rootdir systemctl enable gdm3
+
+    elif [ "$FLAVOUR" = "kde" ]; then
+        chroot rootdir apt install -y \
+            kde-standard sddm plasma-nm firefox-esr
+
+        chroot rootdir systemctl disable gdm3 2>/dev/null || true
+        chroot rootdir systemctl enable sddm
     fi
 
     # user
-    chroot rootdir useradd -m -s /bin/bash luser
-    echo "luser:luser" | chroot rootdir chpasswd
-    chroot rootdir usermod -aG sudo luser
+    chroot rootdir useradd -m -s /bin/bash siergtc
+    echo "siergtc:siergtc" | chroot rootdir chpasswd
+    chroot rootdir usermod -aG sudo siergtc
 
     # autologin
     if [ "$FLAVOUR" = "lomiri" ]; then
         mkdir -p rootdir/etc/lightdm/lightdm.conf.d
         cat > rootdir/etc/lightdm/lightdm.conf.d/50-autologin.conf <<EOF
 [Seat:*]
-autologin-user=luser
+autologin-user=siergtc
 autologin-user-timeout=0
 user-session=lomiri
 greeter-session=lightdm-gtk-greeter
+EOF
+
+    elif [ "$FLAVOUR" = "kde" ]; then
+        mkdir -p rootdir/etc/sddm.conf.d
+        cat > rootdir/etc/sddm.conf.d/autologin.conf <<EOF
+[Autologin]
+User=siergtc
+Session=plasma.desktop
 EOF
 
     else
@@ -132,7 +147,7 @@ EOF
         cat > rootdir/etc/gdm3/daemon.conf <<EOF
 [daemon]
 AutomaticLoginEnable=true
-AutomaticLogin=luser
+AutomaticLogin=siergtc
 EOF
     fi
 
