@@ -68,7 +68,7 @@ rm ../linux-xiaomi-sheng/lib/modules/**/build
 cd ..
 git clone https://github.com/map220v/sheng-firmware
 cd sheng-firmware
-rm -rf ath12k
+# rm -rf ath12k   Why?
 
 cd ..
 mkdir -p firmware-xiaomi-sheng/usr/lib/firmware
